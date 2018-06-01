@@ -14,11 +14,11 @@
 #include <string>
 #include <vector>
 
-#include <osquery/registry.h>
-#include <osquery/status.h>
+#include <osquery/plugin.h>
 
 namespace osquery {
 
+class Status;
 /**
  * @brief A list of supported backing storage categories: called domains.
  *
@@ -49,6 +49,9 @@ extern const std::string kEvents;
 
 /// The "domain" where the results of carve queries are stored.
 extern const std::string kCarves;
+
+/// The running version of our database schema
+extern const std::string kDatabaseResultsVersion;
 
 /**
  * @brief The "domain" where buffered log results are stored.

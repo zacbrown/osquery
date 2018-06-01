@@ -9,12 +9,14 @@
  */
 
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
 #include <osquery/config.h>
 #include <osquery/core.h>
 #include <osquery/logger.h>
+#include <osquery/registry_factory.h>
 #include <osquery/tables.h>
 
 #include "osquery/core/conversions.h"
@@ -73,11 +75,9 @@ void parseTree(const pt::ptree& tree, std::map<std::string, std::string>& res) {
       nodeName = node.first.empty() ? "DataElement" : node.first;
     }
 
-    if (res[nodeName] == "") {
-      res[nodeName] = node.second.data();
-    } else {
-      res[nodeName] = res[nodeName] + "," + node.second.data();
-    }
+    res[nodeName] = res[nodeName].empty()
+                        ? node.second.data()
+                        : res[nodeName] + "," + node.second.data();
 
     parseTree(node.second, res);
   }

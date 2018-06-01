@@ -9,6 +9,7 @@
  */
 
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include <osquery/database.h>
 #include <osquery/flags.h>
@@ -45,7 +46,7 @@ const std::string kLogs = "logs";
 const std::string kDbEpochSuffix = "epoch";
 const std::string kDbCounterSuffix = "counter";
 
-const std::string kDatabseResultsVersion = "1";
+const std::string kDatabaseResultsVersion = "1";
 
 const std::vector<std::string> kDomains = {
     kPersistentSettings, kQueries, kEvents, kLogs, kCarves};
@@ -366,11 +367,6 @@ Status ptreeToRapidJSON(const std::string& in, std::string& out) {
     return Status(1, "Failed to parse JSON");
   }
 
-  if (tree.empty()) {
-    JSON().toString(out);
-    return Status();
-  }
-
   auto json = JSON::newArray();
   for (const auto& t : tree) {
     std::stringstream ss;
@@ -430,7 +426,7 @@ Status upgradeDatabase() {
   std::string db_results_version{""};
   getDatabaseValue(kPersistentSettings, "results_version", db_results_version);
 
-  if (db_results_version == kDatabseResultsVersion) {
+  if (db_results_version == kDatabaseResultsVersion) {
     return Status();
   }
 
@@ -441,7 +437,7 @@ Status upgradeDatabase() {
   }
 
   setDatabaseValue(
-      kPersistentSettings, "results_version", kDatabseResultsVersion);
+      kPersistentSettings, "results_version", kDatabaseResultsVersion);
   return Status();
 }
 }
