@@ -14,7 +14,9 @@
     '', `
     Scope = "Function", `
     Target = "*")]
-param()
+param(
+    [Switch]$SkipVSInstall = $false
+)
 
 # URL of where our pre-compiled third-party dependenices are archived
 $THIRD_PARTY_ARCHIVE_URL = 'https://osquery-packages.s3.amazonaws.com/choco'
@@ -478,23 +480,25 @@ function Main {
   [Environment]::SetEnvironmentVariable("OSQUERY_PYTHON_PATH", $pythonInstall, "Machine")
   $out = Install-PipPackage
   $out = Update-GitSubmodule
-  if (Test-Path env:OSQUERY_BUILD_HOST) {
-    $out = Install-ChocoPackage 'visualcppbuildtools'
-  } else {
-    $deploymentFile = Resolve-Path ([System.IO.Path]::Combine($PSScriptRoot, 'vsdeploy.xml'))
-    $chocoParams = @("--execution-timeout", "7200", "-packageParameters", "--AdminFile ${deploymentFile}")
-    $out = Install-ChocoPackage 'visualstudio2015community' '' ${chocoParams}
-
-    if (Test-RebootPending -eq $true) {
-      Write-Host "[*] Windows requires a reboot to complete installing Visual Studio." -foregroundcolor yellow
-      Write-Host "[*] Please reboot your system and re-run this provisioning script." -foregroundcolor yellow
-      Exit 0
-    }
-
-    if ($PSVersionTable.PSVersion.Major -lt 5 -and $PSVersionTable.PSVersion.Minor -lt 1 ) {
-      Write-Host "[*] Powershell version is < 5.1. Skipping Powershell Linter Installation." -foregroundcolor yellow
+  if ($SkipVSInstall -eq $false) {
+    if (Test-Path env:OSQUERY_BUILD_HOST) {
+      $out = Install-ChocoPackage 'visualcppbuildtools'
     } else {
-      $out = Install-PowershellLinter
+      $deploymentFile = Resolve-Path ([System.IO.Path]::Combine($PSScriptRoot, 'vsdeploy.xml'))
+      $chocoParams = @("--execution-timeout", "7200", "-packageParameters", "--AdminFile ${deploymentFile}")
+      $out = Install-ChocoPackage 'visualstudio2015community' '' ${chocoParams}
+
+      if (Test-RebootPending -eq $true) {
+        Write-Host "[*] Windows requires a reboot to complete installing Visual Studio." -foregroundcolor yellow
+        Write-Host "[*] Please reboot your system and re-run this provisioning script." -foregroundcolor yellow
+        Exit 0
+      }
+
+      if ($PSVersionTable.PSVersion.Major -lt 5 -and $PSVersionTable.PSVersion.Minor -lt 1 ) {
+        Write-Host "[*] Powershell version is < 5.1. Skipping Powershell Linter Installation." -foregroundcolor yellow
+      } else {
+        $out = Install-PowershellLinter
+      }
     }
   }
   $out = Install-ThirdParty
