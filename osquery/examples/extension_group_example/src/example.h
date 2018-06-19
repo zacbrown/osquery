@@ -10,4 +10,13 @@
 
 #pragma once
 
-#include <osquery/events.h>
+#include <osquery/sdk.h>
+#include <osquery/system.h>
+
+namespace osquery {
+class ExampleTable : public TablePlugin {
+ private:
+  TableColumns columns() const;
+  QueryData generate(QueryContext& request);
+};
+} // namespace osquery

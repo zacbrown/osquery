@@ -8,13 +8,23 @@
  *  You may select, at your option, one of the above-listed licenses.
  */
 
-#include "osquery/events/kernel.h"
-
-#include <osquery/config.h>
+#include "example.h"
 
 namespace osquery {
-
-void loadKernelExtension() {
+TableColumns ExampleTable::columns() const {
+  return {
+      std::make_tuple("example_text", TEXT_TYPE, ColumnOptions::DEFAULT),
+      std::make_tuple("example_integer", INTEGER_TYPE, ColumnOptions::DEFAULT),
+  };
 }
 
+QueryData ExampleTable::generate(QueryContext& request) {
+  static_cast<void>(request);
+
+  Row r;
+  r["example_text"] = "example";
+  r["example_integer"] = INTEGER(1);
+
+  return {r};
+}
 } // namespace osquery

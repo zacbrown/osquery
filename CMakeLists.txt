@@ -304,6 +304,7 @@ else()
     # To be safe, only include them when building 'release' outputs.
     add_compile_options(
       -g
+      -fno-limit-debug-info
       -fPIE
       -fpie
       -fPIC
@@ -378,14 +379,6 @@ if(DEFINED ENV{SKIP_CARVER})
   set(SKIP_CARVER TRUE)
   add_definitions(-DSKIP_CARVER=1)
 endif()
-
-# The kernel builds are skipped by default.
-if(DEFINED ENV{SKIP_KERNEL} AND "$ENV{SKIP_KERNEL}" STREQUAL "False")
-  set(SKIP_KERNEL FALSE)
-else()
-  set(SKIP_KERNEL TRUE)
-endif()
-
 
 # Similar to the feature skips, there are default-build skips.
 if(DEFINED ENV{SKIP_TESTS})
@@ -510,6 +503,7 @@ add_definitions(
   -DSTRIP_FLAG_HELP=1
   -DBOOST_NETWORK_ENABLE_HTTPS
   -DNOMINMAX
+  -DBOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE
 
   # See boost 1.65 breakage https://github.com/Homebrew/homebrew-core/pull/17150
   -D__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES=0
@@ -603,6 +597,9 @@ else()
 endif()
 
 if(WINDOWS)
+  if(NOT OS_LIB_DIRS)
+    set(OS_LIB_DIRS)
+  endif()
   foreach(DEP_DIR ${WINDOWS_DEP_LIST})
     file(GLOB_RECURSE WINDOWS_LOCAL_LIB_DIRS LIST_DIRECTORIES false "${DEP_DIR}/*.lib")
     foreach(LIB_FILE ${WINDOWS_LOCAL_LIB_DIRS})
@@ -686,11 +683,6 @@ if(NOT SKIP_TESTS)
   add_subdirectory(tools/tests)
 endif()
 
-# Include the kernel building targets/macros
-if(NOT SKIP_KERNEL AND NOT ${OSQUERY_BUILD_SDK_ONLY})
-  add_subdirectory(kernel)
-endif()
-
 # Packages must be included after all other CMake includes.
 if(NOT ${OSQUERY_BUILD_SDK_ONLY})
   include(Packages)
@@ -748,7 +740,7 @@ add_custom_target(
 # make sync
 add_custom_target(
   sync
-  "${CMAKE_SOURCE_DIR}/tools/sync.sh" "${CMAKE_BINARY_DIR}"
+  "${CMAKE_SOURCE_DIR}/tools/sync.sh" "${CMAKE_BINARY_DIR}" "${BUILD_DEPS}/lib:${BUILD_DEPS}/legacy/lib"
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   COMMENT "Generating sdk sync: ${CMAKE_BINARY_DIR}/sync"
   DEPENDS osquery_extensions osquery_amalgamation

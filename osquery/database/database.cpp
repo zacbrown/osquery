@@ -220,6 +220,17 @@ Status getDatabaseValue(const std::string& domain,
   }
 }
 
+Status getDatabaseValue(const std::string& domain,
+                        const std::string& key,
+                        int& value) {
+  std::string result;
+  auto s = getDatabaseValue(domain, key, result);
+  if (s.ok()) {
+    value = std::stoi(result);
+  }
+  return s;
+}
+
 Status setDatabaseValue(const std::string& domain,
                         const std::string& key,
                         const std::string& value) {
@@ -242,6 +253,12 @@ Status setDatabaseValue(const std::string& domain,
     auto plugin = getDatabasePlugin();
     return plugin->put(domain, key, value);
   }
+}
+
+Status setDatabaseValue(const std::string& domain,
+                        const std::string& key,
+                        int value) {
+  return setDatabaseValue(domain, key, std::to_string(value));
 }
 
 Status deleteDatabaseValue(const std::string& domain, const std::string& key) {
@@ -341,20 +358,8 @@ void resetDatabase() {
 }
 
 void dumpDatabase() {
-  for (const auto& domain : kDomains) {
-    std::vector<std::string> keys;
-    if (!scanDatabaseKeys(domain, keys)) {
-      continue;
-    }
-    for (const auto& key : keys) {
-      std::string value;
-      if (!getDatabaseValue(domain, key, value)) {
-        continue;
-      }
-      fprintf(
-          stdout, "%s[%s]: %s\n", domain.c_str(), key.c_str(), value.c_str());
-    }
-  }
+  auto plugin = getDatabasePlugin();
+  plugin->dumpDatabase();
 }
 
 Status ptreeToRapidJSON(const std::string& in, std::string& out) {
